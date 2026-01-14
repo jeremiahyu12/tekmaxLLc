@@ -16,24 +16,25 @@ function securityHeaders(req: express.Request, res: express.Response, next: expr
   res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   
-  // HSTS (HTTP Strict Transport Security) - only in production with HTTPS
-  if (process.env.NODE_ENV === 'production' && req.secure) {
-    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  // HSTS (HTTP Strict Transport Security) - always in production (Render uses HTTPS)
+  if (process.env.NODE_ENV === 'production') {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
   }
   
   // Content Security Policy - allow necessary resources
-  // Note: CSP is permissive to avoid blocking legitimate resources
-  // In production, you may want to tighten this based on your needs
+  // Explicitly allow Google Images and other trusted sources
   const csp = [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:",
     "style-src 'self' 'unsafe-inline' https:",
-    "img-src 'self' data: https: blob:",
+    "img-src 'self' data: https: blob: https://encrypted-tbn0.gstatic.com https://*.gstatic.com",
     "font-src 'self' data: https:",
     "connect-src 'self' https: wss: ws:",
     "frame-ancestors 'none'",
     "base-uri 'self'",
-    "form-action 'self'"
+    "form-action 'self'",
+    "object-src 'none'",
+    "upgrade-insecure-requests"
   ].join('; ');
   
   res.setHeader('Content-Security-Policy', csp);

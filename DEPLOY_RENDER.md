@@ -4,7 +4,7 @@ Step-by-step guide para i-deploy ang TekMax delivery management system sa Render
 
 ## 📋 Prerequisites
 
-1. ✅ GitHub repository: https://github.com/jeremiah-yu/TekmaxLLC
+1. ✅ GitHub repository: https://github.com/jeremiahyu12/tekmaxLLc
 2. ✅ Render account (sign up at https://render.com - FREE)
 3. ✅ PostgreSQL database (gagawin natin sa Render)
 
@@ -59,7 +59,7 @@ psql $DATABASE_URL < database/schema.sql
 2. Click **"New +"** → **"Web Service"**
 3. Connect GitHub:
    - Click **"Connect account"** kung first time
-   - Select repository: **`jeremiah-yu/TekmaxLLC`**
+   - Select repository: **`jeremiahyu12/tekmaxLLc`**
    - Click **"Connect"**
 
 4. Configure Backend Service:
@@ -106,7 +106,7 @@ psql $DATABASE_URL < database/schema.sql
 
 1. Sa Render Dashboard
 2. Click **"New +"** → **"Static Site"**
-3. Connect repository: **`jeremiah-yu/TekmaxLLC`**
+3. Connect repository: **`jeremiahyu12/tekmaxLLc`**
 4. Configure:
    ```
    Name: tekmax-frontend
