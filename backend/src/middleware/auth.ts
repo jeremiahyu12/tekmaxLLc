@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { query } from '../database/connection';
 
+// AuthRequest properly extends Express Request with all its properties
 export interface AuthRequest extends Request {
   user?: {
     id: string;
@@ -9,6 +10,11 @@ export interface AuthRequest extends Request {
     role: string;
     restaurantId?: string;
   };
+  // Explicitly include Request properties to ensure TypeScript recognizes them
+  headers: Request['headers'];
+  body: any;
+  params: Request['params'];
+  query: Request['query'];
 }
 
 export async function authenticate(

@@ -29,7 +29,7 @@ router.post('/', authorize('restaurant_owner', 'admin'), async (req: AuthRequest
     const ownerId = req.user!.role === 'admin' ? req.body.ownerId || req.user!.id : req.user!.id;
 
     // If agencyPartnerId is provided, verify it's a valid agency_partner
-    let agencyPartnerIdToUse = null;
+    let agencyPartnerIdToUse: string | null = null;
     if (agencyPartnerId) {
       const agencyCheck = await query(
         'SELECT id FROM users WHERE id = $1 AND role = $2',
@@ -41,7 +41,7 @@ router.post('/', authorize('restaurant_owner', 'admin'), async (req: AuthRequest
       agencyPartnerIdToUse = agencyPartnerId;
     } else if (req.user!.role === 'agency_partner') {
       // If registering as agency partner, link to themselves
-      agencyPartnerIdToUse = req.user!.id;
+      agencyPartnerIdToUse = req.user!.id || null;
     }
 
     const result = await query(

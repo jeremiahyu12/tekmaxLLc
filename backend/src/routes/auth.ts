@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import { query } from '../database/connection';
 import { authRateLimiter } from '../middleware/rateLimiter';
 import { AppError } from '../middleware/errorHandler';
@@ -41,10 +41,15 @@ router.post('/register', authRateLimiter, async (req: Request, res: Response, ne
     const user = result.rows[0];
 
     // Generate token
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      throw new AppError('JWT_SECRET not configured', 500);
+    }
+    const options: SignOptions = { expiresIn: process.env.JWT_EXPIRES_IN || '7d' } as SignOptions;
     const token = jwt.sign(
       { userId: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET!,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+      secret,
+      options
     );
 
     res.status(201).json({
@@ -96,10 +101,15 @@ router.post('/login', authRateLimiter, async (req: Request, res: Response, next:
     }
 
     // Generate token
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      throw new AppError('JWT_SECRET not configured', 500);
+    }
+    const options: SignOptions = { expiresIn: process.env.JWT_EXPIRES_IN || '7d' } as SignOptions;
     const token = jwt.sign(
       { userId: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET!,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+      secret,
+      options
     );
 
     res.json({

@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Response, NextFunction } from 'express';
 import { query } from '../database/connection';
 import { authenticate, authorize, AuthRequest } from '../middleware/auth';
 import { AppError } from '../middleware/errorHandler';
@@ -8,7 +8,7 @@ const router = express.Router();
 router.use(authenticate);
 
 // Get restaurant settings (Gloria Food, DoorDash)
-router.get('/settings', authorize('restaurant_owner'), async (req: AuthRequest, res, next) => {
+router.get('/settings', authorize('restaurant_owner'), async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     // Get user's restaurant
     const restaurantResult = await query(
@@ -327,7 +327,7 @@ router.post('/integration-email', authorize('restaurant_owner'), async (req: Aut
 });
 
 // Get or generate Gloria Food API key for connection
-router.get('/gloria-food/api-key', authorize('restaurant_owner'), async (req: AuthRequest, res, next) => {
+router.get('/gloria-food/api-key', authorize('restaurant_owner'), async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     // Always return webhook URL (it's static, doesn't depend on database)
     const webhookUrl = `${process.env.API_URL || 'http://localhost:3000'}/api/webhooks/gloria-food`;
