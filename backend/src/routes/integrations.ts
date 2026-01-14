@@ -1,4 +1,4 @@
-import express, { Response, NextFunction } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import { query } from '../database/connection';
 import { authenticate, authorize, AuthRequest } from '../middleware/auth';
 import { AppError } from '../middleware/errorHandler';
@@ -6,6 +6,14 @@ import { AppError } from '../middleware/errorHandler';
 const router = express.Router();
 
 router.use(authenticate);
+
+function getBaseUrl(req: Request): string {
+  // Render/Reverse-proxy friendly base URL builder
+  const forwardedProto = (req.headers['x-forwarded-proto'] as string | undefined)?.split(',')[0]?.trim();
+  const proto = forwardedProto || req.protocol;
+  const host = req.get('host');
+  return `${proto}://${host}`;
+}
 
 // Get restaurant settings (Gloria Food, DoorDash)
 router.get('/settings', authorize('restaurant_owner'), async (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -330,7 +338,7 @@ router.post('/integration-email', authorize('restaurant_owner'), async (req: Aut
 router.get('/gloria-food/api-key', authorize('restaurant_owner'), async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     // Always return webhook URL (it's static, doesn't depend on database)
-    const webhookUrl = `${process.env.API_URL || 'http://localhost:3000'}/api/webhooks/gloria-food`;
+    const webhookUrl = `${getBaseUrl(req)}/api/webhooks/gloria-food`;
     
     // Try to get restaurant and webhook config, but don't fail if it doesn't exist
     try {
@@ -398,7 +406,7 @@ router.get('/gloria-food/api-key', authorize('restaurant_owner'), async (req: Au
   } catch (error) {
     console.error('Error in /gloria-food/api-key:', error);
     // Even on error, return the webhook URL
-    const webhookUrl = `${process.env.API_URL || 'http://localhost:3000'}/api/webhooks/gloria-food`;
+    const webhookUrl = `${getBaseUrl(req)}/api/webhooks/gloria-food`;
     return res.json({ 
       apiKey: null,
       webhookUrl: webhookUrl,
@@ -446,7 +454,7 @@ router.get('/gloria-food/webhook-config', authorize('restaurant_owner'), async (
 
     res.json({ 
       webhookConfig: webhookConfig.rows[0],
-      webhookUrl: `${process.env.API_URL || 'http://localhost:3000'}/api/webhooks/gloria-food`,
+      webhookUrl: `${getBaseUrl(req)}/api/webhooks/gloria-food`,
     });
   } catch (error) {
     next(error);

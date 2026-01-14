@@ -207,16 +207,16 @@ async function loadIntegrationSettings() {
                 if (webhookData?.webhookUrl) {
                     webhookInput.value = webhookData.webhookUrl;
                 } else {
-                    // Fallback webhook URL
-                    webhookInput.value = 'http://localhost:3000/api/webhooks/gloria-food';
+                    // Fallback webhook URL (use current site origin)
+                    webhookInput.value = `${window.location.origin}/api/webhooks/gloria-food`;
                 }
             }
         } catch (error) {
             console.error('Error loading webhook URL:', error);
             const webhookInput = document.getElementById('gloriaFoodWebhookUrlInput');
             if (webhookInput) {
-                // Use fallback URL even on error
-                webhookInput.value = 'http://localhost:3000/api/webhooks/gloria-food';
+                // Use fallback URL even on error (use current site origin)
+                webhookInput.value = `${window.location.origin}/api/webhooks/gloria-food`;
             }
         }
     } catch (error) {
@@ -255,7 +255,7 @@ async function saveGloriaFoodSettings() {
                     if (webhookData?.webhookUrl) {
                         webhookInput.value = webhookData.webhookUrl;
                     } else {
-                        webhookInput.value = 'http://localhost:3000/api/webhooks/gloria-food';
+                        webhookInput.value = `${window.location.origin}/api/webhooks/gloria-food`;
                     }
                 }
             } catch (error) {
@@ -343,7 +343,7 @@ async function loadGloriaFoodWebhookUrl() {
                 webhookUrlInput.value = data.webhookUrl;
             } else {
                 // Fallback webhook URL if API doesn't return it
-                webhookUrlInput.value = 'http://localhost:3000/api/webhooks/gloria-food';
+                webhookUrlInput.value = `${window.location.origin}/api/webhooks/gloria-food`;
             }
         }
     } catch (error) {
@@ -351,7 +351,7 @@ async function loadGloriaFoodWebhookUrl() {
         const webhookUrlInput = document.getElementById('gloriaFoodWebhookUrlInput');
         if (webhookUrlInput) {
             // Use fallback URL even on error
-            webhookUrlInput.value = 'http://localhost:3000/api/webhooks/gloria-food';
+            webhookUrlInput.value = `${window.location.origin}/api/webhooks/gloria-food`;
         }
     }
 }

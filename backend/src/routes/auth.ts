@@ -146,7 +146,7 @@ router.get('/me', authenticate, async (req: AuthRequest, res: Response, next: Ne
 });
 
 // Update user profile
-router.patch('/profile', authenticate, async (req: AuthRequest, res, next) => {
+router.patch('/profile', authenticate, async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const { firstName, lastName, email, phone } = req.body;
 
@@ -186,6 +186,97 @@ router.patch('/profile', authenticate, async (req: AuthRequest, res, next) => {
     res.json({
       user: result.rows[0],
       message: 'Profile updated successfully',
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+async function ensureUserProfileDetailsTable(): Promise<void> {
+  // Safe to call multiple times
+  await query(
+    `CREATE TABLE IF NOT EXISTS user_profile_details (
+      user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+      company_name VARCHAR(255),
+      billing_email VARCHAR(255),
+      billing_address TEXT,
+      contact_name VARCHAR(255),
+      contact_phone VARCHAR(50),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )`
+  );
+  await query('CREATE INDEX IF NOT EXISTS idx_user_profile_details_user_id ON user_profile_details(user_id)');
+}
+
+// Get billing/contact profile details
+router.get('/profile-details', authenticate, async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    try {
+      await ensureUserProfileDetailsTable();
+    } catch (e) {
+      // If running on mock DB or lacking privileges, ignore and continue
+    }
+
+    const result = await query(
+      `SELECT company_name, billing_email, billing_address, contact_name, contact_phone
+       FROM user_profile_details
+       WHERE user_id = $1`,
+      [req.user!.id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.json({
+        company_name: null,
+        billing_email: null,
+        billing_address: null,
+        contact_name: null,
+        contact_phone: null,
+      });
+    }
+
+    return res.json(result.rows[0]);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Update billing/contact profile details
+router.patch('/profile-details', authenticate, async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const { company_name, billing_email, billing_address, contact_name, contact_phone } = req.body;
+
+    try {
+      await ensureUserProfileDetailsTable();
+    } catch (e) {
+      // ignore (mock DB)
+    }
+
+    const result = await query(
+      `INSERT INTO user_profile_details (user_id, company_name, billing_email, billing_address, contact_name, contact_phone, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP)
+       ON CONFLICT (user_id)
+       DO UPDATE SET
+         company_name = COALESCE(EXCLUDED.company_name, user_profile_details.company_name),
+         billing_email = COALESCE(EXCLUDED.billing_email, user_profile_details.billing_email),
+         billing_address = COALESCE(EXCLUDED.billing_address, user_profile_details.billing_address),
+         contact_name = COALESCE(EXCLUDED.contact_name, user_profile_details.contact_name),
+         contact_phone = COALESCE(EXCLUDED.contact_phone, user_profile_details.contact_phone),
+         updated_at = CURRENT_TIMESTAMP
+       RETURNING company_name, billing_email, billing_address, contact_name, contact_phone`,
+      [
+        req.user!.id,
+        company_name ?? null,
+        billing_email ?? null,
+        billing_address ?? null,
+        contact_name ?? null,
+        contact_phone ?? null,
+      ]
+    );
+
+    return res.json({
+      ...result.rows[0],
+      message: 'Profile details updated successfully',
     });
   } catch (error) {
     next(error);
