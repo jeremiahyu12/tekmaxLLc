@@ -10,19 +10,33 @@ import { rateLimiter } from './middleware/rateLimiter';
 
 // Security headers middleware
 function securityHeaders(req: express.Request, res: express.Response, next: express.NextFunction) {
-  // Security headers
+  // Basic security headers
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('X-DNS-Prefetch-Control', 'off');
+  res.setHeader('X-Download-Options', 'noopen');
+  res.setHeader('X-Permitted-Cross-Domain-Policies', 'none');
+  
+  // Permissions Policy (formerly Feature Policy)
+  res.setHeader('Permissions-Policy', [
+    'geolocation=()',
+    'microphone=()',
+    'camera=()',
+    'payment=()',
+    'usb=()',
+    'magnetometer=()',
+    'gyroscope=()',
+    'accelerometer=()'
+  ].join(', '));
   
   // HSTS (HTTP Strict Transport Security) - always in production (Render uses HTTPS)
   if (process.env.NODE_ENV === 'production') {
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
   }
   
-  // Content Security Policy - allow necessary resources
-  // Explicitly allow Google Images and other trusted sources
+  // Content Security Policy - comprehensive and secure
   const csp = [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:",
@@ -34,10 +48,19 @@ function securityHeaders(req: express.Request, res: express.Response, next: expr
     "base-uri 'self'",
     "form-action 'self'",
     "object-src 'none'",
-    "upgrade-insecure-requests"
+    "media-src 'self'",
+    "worker-src 'self'",
+    "manifest-src 'self'",
+    "upgrade-insecure-requests",
+    "block-all-mixed-content"
   ].join('; ');
   
   res.setHeader('Content-Security-Policy', csp);
+  
+  // Additional security for production
+  if (process.env.NODE_ENV === 'production') {
+    res.setHeader('Expect-CT', 'max-age=86400, enforce');
+  }
   
   next();
 }
@@ -123,6 +146,16 @@ app.get('/health', (req, res) => {
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Security.txt route
+app.get('/.well-known/security.txt', (req, res) => {
+  res.type('text/plain');
+  res.send(`Contact: mailto:support@tekmax.com
+Expires: 2025-12-31T23:59:59.000Z
+Preferred-Languages: en
+Canonical: https://${req.get('host')}/.well-known/security.txt
+`);
 });
 
 // API Routes

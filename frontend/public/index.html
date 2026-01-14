@@ -3,10 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
     <title>TekMax Delivery Platform</title>
     <meta http-equiv="refresh" content="0; url=/login.html">
     <script>
-        window.location.href = '/login.html';
+        if (window.location.protocol === 'http:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+            window.location.href = window.location.href.replace('http:', 'https:');
+        } else {
+            window.location.href = '/login.html';
+        }
     </script>
 </head>
 <body>

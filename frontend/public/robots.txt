@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /merchant/profile.html
+Disallow: /merchant/settings.html
+
+Sitemap: https://tekmax-backend.onrender.com/sitemap.xml
